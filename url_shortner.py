@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, unquote, quote
 #unquote is to replace encoded code to normal code with special characters.
 #parse_qs is used to extract parameters from the path.
 
-memory = {}
+storage_of_links = {}
 
 #The below form is used when someone makes a get request that is when some access thr uri
 #You can write your own html code here.Make sure to add {{ instead of { when using styles.
@@ -92,17 +92,17 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self): # to handle get request
         url_path = unquote(self.path[1:]) # to unquote the query path.
         if url_path:
-            if url_path in memory:
+            if url_path in storage_of_links:
                 # response from the server to the client.
                 self.send_response(303) # redirect code
-                self.send_header('Location',memory[url_path]) #when you access some shortend link i.e. localhost:8090/<short_url_name> It will
-                #fetch the value from the memory and redirect to the original url.
+                self.send_header('Location',storage_of_links[url_path]) #when you access some shortend link i.e. localhost:8090/<short_url_name> It will
+                #fetch the value from the storage_of_links and redirect to the original url.
                 self.end_headers()
         else:
             self.send_response(200)
             self.send_header('Content-type', 'text/html; charset=utf-8') # telling the browser to use which parser when the response comes
             self.end_headers()
-            saved_url = '\n'.join('<div id="url"><a href="/{}">{}</a> : {}</div>'.format(key,key,memory[key]) for key in sorted(memory.keys())) #saved links
+            saved_url = '\n'.join('<div id="url"><a href="/{}">{}</a> : {}</div>'.format(key,key,storage_of_links[key]) for key in sorted(storage_of_links.keys())) #saved links
             self.wfile.write(form.format(saved_url).encode()) #html response
 
     def do_POST(self):
@@ -118,13 +118,13 @@ class Handler(BaseHTTPRequestHandler):
         else:
             orginal_uri = params['originalurl'][0]
             short = params['shorturl'][0]
-            if short in memory:
+            if short in storage_of_links:
                 self.send_response(400)
                 self.send_header('content-type', 'text/plain')
                 self.end_headers()
                 self.wfile.write('The shorturl name is already taken'.encode())
             else:
-                memory[short] = orginal_uri 
+                storage_of_links[short] = orginal_uri 
                 # Instead of using local memoery you can connect to your db and save these in form of key value pair.So next time when a new users 
                 # try to connect to the url, you can show up all the details.
 
